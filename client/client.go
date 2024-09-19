@@ -28,6 +28,7 @@ import (
 
 type QQClient struct {
 	Uin         int64
+	Uid         string
 	PasswordMd5 [16]byte
 
 	stat Statistics
@@ -269,6 +270,7 @@ func (c *QQClient) TokenLogin(token []byte) error {
 	{
 		r := binary.NewReader(token)
 		c.Uin = r.ReadInt64()
+		c.Uid = r.ReadStringShort()
 		c.sig.D2 = r.ReadBytesShort()
 		c.sig.D2Key = r.ReadBytesShort()
 		c.sig.TGT = r.ReadBytesShort()
@@ -421,6 +423,7 @@ func (c *QQClient) init(tokenLogin bool) error {
 func (c *QQClient) GenToken() []byte {
 	return binary.NewWriterF(func(w *binary.Writer) {
 		w.WriteUInt64(uint64(c.Uin))
+		w.WriteStringShort(c.Uid)
 		w.WriteBytesShort(c.sig.D2)
 		w.WriteBytesShort(c.sig.D2Key)
 		w.WriteBytesShort(c.sig.TGT)
