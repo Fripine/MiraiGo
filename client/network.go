@@ -10,10 +10,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/Mrs4s/MiraiGo/client/internal/network"
-	"github.com/Mrs4s/MiraiGo/client/internal/oicq"
-	"github.com/Mrs4s/MiraiGo/message"
-	"github.com/Mrs4s/MiraiGo/utils"
+	"github.com/Fripine/MiraiGo/client/internal/network"
+	"github.com/Fripine/MiraiGo/client/internal/oicq"
+	"github.com/Fripine/MiraiGo/message"
+	"github.com/Fripine/MiraiGo/utils"
 )
 
 // ConnectionQualityInfo 客户端连接质量测试结果

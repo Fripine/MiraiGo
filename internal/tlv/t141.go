@@ -1,6 +1,6 @@
 package tlv
 
-import "github.com/Mrs4s/MiraiGo/binary"
+import "github.com/Fripine/MiraiGo/binary"
 
 func T141(simInfo, apn []byte) []byte {
 	return binary.NewWriterF(func(w *binary.Writer) {
