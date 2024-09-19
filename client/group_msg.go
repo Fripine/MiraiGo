@@ -13,7 +13,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Fripine/MiraiGo/client/internal/network"
-	"github.com/Fripine/MiraiGo/client/pb/cmd0x388"
 	"github.com/Fripine/MiraiGo/client/pb/longmsg"
 	"github.com/Fripine/MiraiGo/client/pb/msg"
 	"github.com/Fripine/MiraiGo/client/pb/multimsg"
@@ -463,52 +462,66 @@ func (c *QQClient) parseGroupMessage(m *msg.Message) *message.GroupMessage {
 			}
 		}
 	}
-	if m.Body.RichText.Ptt != nil {
-		var url string
-		if len(m.Body.RichText.Ptt.DownPara) == 0 {
-			req := &cmd0x388.D388ReqBody{
-				NetType: proto.Uint32(3),
-				Subcmd:  proto.Uint32(4),
-				GetpttUrlReq: []*cmd0x388.GetPttUrlReq{
-					{
-						GroupCode:       proto.Uint64(uint64(m.Head.GroupInfo.GroupCode.Unwrap())),
-						DstUin:          proto.Uint64(uint64(m.Head.ToUin.Unwrap())),
-						Fileid:          proto.Uint64(uint64(m.Body.RichText.Ptt.FileId.Unwrap())),
-						FileMd5:         m.Body.RichText.Ptt.FileMd5,
-						ReqTerm:         proto.Uint32(5),
-						ReqPlatformType: proto.Uint32(9),
-						InnerIp:         proto.Uint32(0),
-						BuType:          proto.Uint32(3),
-						FileId:          proto.Uint64(0),
-						FileKey:         m.Body.RichText.Ptt.FileKey,
-						ReqTransferType: proto.Uint32(2),
-						IsAuto:          proto.Uint32(1),
-					},
-				},
-			}
-			payload, _ := proto.Marshal(req)
-			rsp_raw, _ := c.sendAndWaitDynamic(c.uniPacket("PttStore.GroupPttDown", payload))
-			rsp := new(cmd0x388.D388RspBody)
-			proto.Unmarshal(rsp_raw, rsp)
-			resp := rsp.GetpttUrlRsp[0]
-			url = "http://" + string(resp.DownDomain) + string(resp.DownPara)
-		} else {
-			url = "http://grouptalk.c2c.qq.com" + string(m.Body.RichText.Ptt.DownPara)
-		}
+	// if m.Body.RichText.Ptt != nil {
+	// 	var url string
+	// 	if len(m.Body.RichText.Ptt.DownPara) == 0 {
+	// 		req := &cmd0x388.D388ReqBody{
+	// 			NetType: proto.Uint32(3),
+	// 			Subcmd:  proto.Uint32(4),
+	// 			GetpttUrlReq: []*cmd0x388.GetPttUrlReq{
+	// 				{
+	// 					GroupCode:       proto.Uint64(uint64(m.Head.GroupInfo.GroupCode.Unwrap())),
+	// 					DstUin:          proto.Uint64(uint64(m.Head.ToUin.Unwrap())),
+	// 					Fileid:          proto.Uint64(uint64(m.Body.RichText.Ptt.FileId.Unwrap())),
+	// 					FileMd5:         m.Body.RichText.Ptt.FileMd5,
+	// 					ReqTerm:         proto.Uint32(5),
+	// 					ReqPlatformType: proto.Uint32(9),
+	// 					InnerIp:         proto.Uint32(0),
+	// 					BuType:          proto.Uint32(3),
+	// 					FileId:          proto.Uint64(0),
+	// 					FileKey:         m.Body.RichText.Ptt.FileKey,
+	// 					ReqTransferType: proto.Uint32(2),
+	// 					IsAuto:          proto.Uint32(1),
+	// 				},
+	// 			},
+	// 		}
+	// 		payload, _ := proto.Marshal(req)
+	// 		rsp_raw, _ := c.sendAndWaitDynamic(c.uniPacket("PttStore.GroupPttDown", payload))
+	// 		rsp := new(cmd0x388.D388RspBody)
+	// 		proto.Unmarshal(rsp_raw, rsp)
+	// 		resp := rsp.GetpttUrlRsp[0]
+	// 		url = "http://" + string(resp.DownDomain) + string(resp.DownPara)
+	// 	} else {
+	// 		url = "http://grouptalk.c2c.qq.com" + string(m.Body.RichText.Ptt.DownPara)
+	// 	}
 
-		g.Elements = []message.IMessageElement{
-			&message.VoiceElement{
-				Name: m.Body.RichText.Ptt.FileName.Unwrap(),
-				Md5:  m.Body.RichText.Ptt.FileMd5,
-				Size: m.Body.RichText.Ptt.FileSize.Unwrap(),
-				Url:  url,
-			},
-		}
-	}
+	// 	g.Elements = []message.IMessageElement{
+	// 		&message.VoiceElement{
+	// 			Name: m.Body.RichText.Ptt.FileName.Unwrap(),
+	// 			Md5:  m.Body.RichText.Ptt.FileMd5,
+	// 			Size: m.Body.RichText.Ptt.FileSize.Unwrap(),
+	// 			Url:  url,
+	// 		},
+	// 	}
+	// }
 	if m.Body.RichText.Attr != nil {
 		g.InternalId = m.Body.RichText.Attr.Random.Unwrap()
 	}
+	c.furtherParseGroupMessage(g)
 	return g
+}
+
+func (c *QQClient) furtherParseGroupMessage(gm *message.GroupMessage) {
+	for _, elem := range gm.Elements {
+		switch e := elem.(type) {
+		case *message.VoiceElement:
+			url, err := c.GetGroupRecordDownloadUrl(c.Uid, e.FileId, gm.GroupCode)
+			if err != nil {
+				continue
+			}
+			e.Url = url
+		}
+	}
 }
 
 // SetEssenceMessage 设为群精华消息
