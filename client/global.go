@@ -195,16 +195,17 @@ func (c *QQClient) parsePrivateMessage(msg *msg.Message) *message.PrivateMessage
 		Sender: sender,
 		Self:   c.Uin,
 		Elements: func() []message.IMessageElement {
-			if msg.Body.RichText.Ptt != nil {
-				return []message.IMessageElement{
-					&message.VoiceElement{
-						Name: msg.Body.RichText.Ptt.FileName.Unwrap(),
-						Md5:  msg.Body.RichText.Ptt.FileMd5,
-						Size: msg.Body.RichText.Ptt.FileSize.Unwrap(),
-						Url:  string(msg.Body.RichText.Ptt.DownPara),
-					},
-				}
-			}
+			// 旧版本的语音消息解析先注释了，解析在ParseMessageElems里面进行
+			// if msg.Body.RichText.Ptt != nil {
+			// 	return []message.IMessageElement{
+			// 		&message.VoiceElement{
+			// 			Name: msg.Body.RichText.Ptt.FileName.Unwrap(),
+			// 			Md5:  msg.Body.RichText.Ptt.FileMd5,
+			// 			Size: msg.Body.RichText.Ptt.FileSize.Unwrap(),
+			// 			Url:  string(msg.Body.RichText.Ptt.DownPara),
+			// 		},
+			// 	}
+			// }
 			return message.ParseMessageElems(msg.Body.RichText.Elems)
 		}(),
 	}

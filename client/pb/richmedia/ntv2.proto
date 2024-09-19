@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+option go_package = "github.com/Mrs4s/MiraiGo/client/pb/richmedia";
+
+message NTV2RichMediaReq {
+  MultiMediaReqHead ReqHead = 1;
+  DownloadReq Download = 3;
+}
+
+message MultiMediaReqHead {
+  CommonHead Common = 1;
+  SceneInfo Scene = 2;
+  ClientMeta Client = 3;
+}
+
+message CommonHead {
+  uint32 RequestId = 1;
+  uint32 Command = 2;
+}
+
+message SceneInfo {
+  uint32 RequestType = 101;
+  uint32 BusinessType = 102;
+  uint32 SceneType = 200;
+  optional C2CUserInfo C2C = 201;
+  optional NTGroupInfo Group = 202;
+}
+
+message ClientMeta {
+  uint32 AgentType = 1;
+}
+
+message C2CUserInfo {
+  uint32 AccountType = 1;
+  string TargetUid = 2;
+}
+
+message NTGroupInfo {
+  uint32 GroupUin = 1;
+}
+
+message DownloadReq {
+  IndexNode Node = 1;
+}
+
+message IndexNode {
+  FileInfo Info = 1;
+  string FileUuid = 2;
+  uint32 StoreId = 3;
+}
+
+message FileInfo {
+  FileType Type = 5;
+  uint32 Time = 8;
+}
+
+message FileType {
+  uint32 Type = 1;
+  uint32 VoiceFormat = 4;
+}
+
+message NTV2RichMediaRsp {
+  MediaResp MediaResp = 4;
+}
+
+message MediaResp {
+  DownloadResp DownloadResp = 3;
+}
+
+message DownloadResp {
+  string Rkey = 1;
+  DownloadInfo Info = 3;
+}
+
+message DownloadInfo {
+  string Domain = 1;
+  string UrlPath = 2;
+}

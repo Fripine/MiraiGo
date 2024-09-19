@@ -671,36 +671,53 @@ func ParseMessageElems(elems []*msg.Elem) []IMessageElement {
 					Name: strings.TrimPrefix(string(animatedStickerMsg.Text), "/"),
 				}
 				return []IMessageElement{sticker} // sticker 永远为单独消息
-			case 48:
+			}
+			bt := elem.CommonElem.BusinessType.Unwrap()
+			switch bt {
+			case 10, 20:
 				img := &msg.PbMultiMediaElement{}
 				_ = proto.Unmarshal(elem.CommonElem.PbElem, img)
 				domain := img.Elem1.Data.Domain.Unwrap()
 				imgURL := img.Elem1.Data.ImgURL.Unwrap()
-
 				if img.Elem2.Data.Friend != nil {
 					rKey := img.Elem2.Data.Friend.RKey.Unwrap()
-					url := fmt.Sprintf("https://%s%s%s&spec=0&rf=naio", domain, imgURL, rKey)
+					url := fmt.Sprintf("https://%s%s%s", domain, imgURL, rKey)
 					res = append(res, &FriendImageElement{
 						ImageId: img.Elem1.Meta.FilePath.Unwrap(),
 						Size:    img.Elem1.Meta.Data.FileLen.Unwrap(),
 						Url:     url,
-						Md5:     img.Elem1.Meta.Data.PicMd5,
+						Md5:     img.Elem1.Meta.Data.FileMd5,
+						Name:    img.Elem1.Meta.Data.FileName.Unwrap(),
 					})
 					newImg = true
 				}
 				if img.Elem2.Data.Group != nil {
 					rKey := img.Elem2.Data.Group.RKey.Unwrap()
-					url := fmt.Sprintf("https://%s%s%s&spec=0&rf=naio", domain, imgURL, rKey)
+					url := fmt.Sprintf("https://%s%s%s", domain, imgURL, rKey)
 					res = append(res, &GroupImageElement{
 						ImageId: img.Elem1.Meta.FilePath.Unwrap(),
 						Size:    img.Elem1.Meta.Data.FileLen.Unwrap(),
 						Url:     url,
-						Md5:     img.Elem1.Meta.Data.PicMd5,
+						Md5:     img.Elem1.Meta.Data.FileMd5,
+						Name:    img.Elem1.Meta.Data.FileName.Unwrap(),
 					})
 					newImg = true
 				}
+			case 12, 22:
+				audio := &msg.PbMultiMediaElement{}
+				_ = proto.Unmarshal(elem.CommonElem.PbElem, audio)
+				ve := &VoiceElement{
+					Name:    audio.Elem1.Meta.Data.FileName.Unwrap(),
+					Md5:     audio.Elem1.Meta.Data.FileMd5,
+					Size:    audio.Elem1.Meta.Data.FileLen.Unwrap(),
+					FileId:  audio.Elem1.Meta.FilePath.Unwrap(),
+					IsGroup: false,
+				}
+				if bt == 22 {
+					ve.IsGroup = true
+				}
+				res = append(res, ve)
 			}
-
 		}
 	}
 	return res
