@@ -58,17 +58,29 @@ func (c *QQClient) buildRecordDownloadReqPacket(Uid string, FileId string, group
 	return c.uniPacket("OidbSvcTrpcTcp.0x126d_200", payload)
 }
 
-func (c *QQClient) ParseRecordDownloadRspPacket(body []byte) string {
+func (c *QQClient) ParseRecordDownloadRspPacket(body []byte) (string, error) {
 	rp := &richmedia.NTV2RichMediaRsp{}
 	if err := proto.Unmarshal(body, rp); err != nil && rp.MediaResp.DownloadResp.Info != nil {
 		c.error("parse RecordDownloadRspPacket error: %v", err)
-		return ""
+		return "", err
 	}
-	return fmt.Sprintf("https://%s%s%s", rp.MediaResp.DownloadResp.Info.Domain, rp.MediaResp.DownloadResp.Info.UrlPath, rp.MediaResp.DownloadResp.Rkey)
+	return fmt.Sprintf("https://%s%s%s", rp.MediaResp.DownloadResp.Info.Domain, rp.MediaResp.DownloadResp.Info.UrlPath, rp.MediaResp.DownloadResp.Rkey), nil
 }
 
-// GetRecordDownloadUrl 获取语音文件下载地址
-func (c *QQClient) GetRecordDownloadUrl(selfUid string, FileId string, groupUin int64, isGroup bool) string {
-	body, _ := c.sendAndWaitDynamic(c.buildRecordDownloadReqPacket(selfUid, FileId, groupUin, isGroup))
+// GetPrivateRecordDownloadUrl 获取私聊语音文件下载地址
+func (c *QQClient) GetPrivateRecordDownloadUrl(selfUid string, FileId string) (string, error) {
+	body, err := c.sendAndWaitDynamic(c.buildRecordDownloadReqPacket(selfUid, FileId, 0, false))
+	if err != nil {
+		return "", err
+	}
+	return c.ParseRecordDownloadRspPacket(body)
+}
+
+// GetGroupRecordDownloadUrl 获取群聊语音文件下载地址
+func (c *QQClient) GetGroupRecordDownloadUrl(selfUid string, FileId string, groupUin int64) (string, error) {
+	body, err := c.sendAndWaitDynamic(c.buildRecordDownloadReqPacket(selfUid, FileId, groupUin, true))
+	if err != nil {
+		return "", err
+	}
 	return c.ParseRecordDownloadRspPacket(body)
 }

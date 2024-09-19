@@ -707,14 +707,10 @@ func ParseMessageElems(elems []*msg.Elem) []IMessageElement {
 				audio := &msg.PbMultiMediaElement{}
 				_ = proto.Unmarshal(elem.CommonElem.PbElem, audio)
 				ve := &VoiceElement{
-					Name:    audio.Elem1.Meta.Data.FileName.Unwrap(),
-					Md5:     audio.Elem1.Meta.Data.FileMd5,
-					Size:    audio.Elem1.Meta.Data.FileLen.Unwrap(),
-					FileId:  audio.Elem1.Meta.FilePath.Unwrap(),
-					IsGroup: false,
-				}
-				if bt == 22 {
-					ve.IsGroup = true
+					Name:   audio.Elem1.Meta.Data.FileName.Unwrap(),
+					Md5:    audio.Elem1.Meta.Data.FileMd5,
+					Size:   audio.Elem1.Meta.Data.FileLen.Unwrap(),
+					FileId: audio.Elem1.Meta.FilePath.Unwrap(),
 				}
 				res = append(res, ve)
 			}

@@ -212,6 +212,7 @@ func (c *QQClient) parsePrivateMessage(msg *msg.Message) *message.PrivateMessage
 	if msg.Body.RichText.Attr != nil {
 		ret.InternalId = msg.Body.RichText.Attr.Random.Unwrap()
 	}
+	c.furtherParsePrivateMessage(ret)
 	return ret
 }
 
@@ -240,6 +241,19 @@ func (c *QQClient) parseTempMessage(msg *msg.Message) *message.TempMessage {
 		Self:      c.Uin,
 		Sender:    sender,
 		Elements:  message.ParseMessageElems(msg.Body.RichText.Elems),
+	}
+}
+
+func (c *QQClient) furtherParsePrivateMessage(pm *message.PrivateMessage) {
+	for _, elem := range pm.Elements {
+		switch e := elem.(type) {
+		case *message.VoiceElement:
+			url, err := c.GetPrivateRecordDownloadUrl(c.Uid, e.FileId)
+			if err != nil {
+				continue
+			}
+			e.Url = url
+		}
 	}
 }
 
