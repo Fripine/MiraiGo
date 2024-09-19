@@ -433,5 +433,5 @@ func (m *GroupMemberInfo) CardChangable() bool {
 	if self == Member {
 		return false
 	}
-	return m.Permission != Owner
+	return m.Permission != Administrator
 }
